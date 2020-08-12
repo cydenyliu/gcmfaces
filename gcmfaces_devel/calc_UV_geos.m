@@ -25,13 +25,15 @@ function [Ug,Vg]=calc_UV_geos(P);
 %  kk=10; cc=[-1 1]*0.1;
 %  kk=30; cc=[-1 1]*0.05;
 %  kk=40; cc=[-1 1]*0.02;
-%  figure; orient tall; m=mygrid.mskC(:,:,kk);
-%  [tmpu,tmpv]=calc_UEVNfromUXVY(U(:,:,kk),V(:,:,kk));
-%  [tmpug,tmpvg]=calc_UEVNfromUXVY(Ug(:,:,kk),Vg(:,:,kk));
-%  subplot(3,1,1); qwckplot(m.*tmpu); caxis(cc); colorbar; title('zonal flow');
-%  subplot(3,1,2); qwckplot(m.*tmpug); caxis(cc); colorbar; title('geostrophic flow');
-%  subplot(3,1,3); qwckplot(m.*tmpu-tmpug); caxis(cc); colorbar; title('difference');
-%
+%  m=mygrid.mskC(:,:,kk); 
+%  tmpP=P(:,:,kk); tmpP=tmpP-nanmedian(tmpP);
+%  [tmpu,tmpv]=calc_UV_zonmer(U(:,:,kk),V(:,:,kk));
+%  [tmpug,tmpvg]=calc_UV_zonmer(Ug(:,:,kk),Vg(:,:,kk));
+%  figure; m_map_gcmfaces(m.*tmpu,1.2,{'myCaxis',cc}); title('zonal flow');
+%  figure; m_map_gcmfaces(m.*tmpug,1.2,{'myCaxis',cc}); title('geostrophic flow');
+%  figure; m_map_gcmfaces(m.*tmpu-tmpug,1.2,{'myCaxis',cc}); title('deviation from geostrophy');
+%  figure; m_map_gcmfaces(m.*tmpP,1.2,{'myCaxis',[-5:0.5:5]}); title('hydrostatic pressure');
+
 
 % development notes:
 %  is P assumed NaN-masked?
@@ -44,7 +46,7 @@ gcmfaces_global;
 
 % mask=squeeze(mygrid.hFacC(:,:,1));
 % dzf=mygrid.DRF;
-nz=length(mygrid.RC); 
+nz=size(P.f1,3);
 
 %constants
 rhoconst=1029; 
@@ -60,8 +62,8 @@ fmat=exch_Z(f);
 
 %replace NaN/1 mask with 0/1 mask:
 P(isnan(P))=0;
-mskW=mygrid.mskW; mskW(isnan(mskW))=0;
-mskS=mygrid.mskS; mskS(isnan(mskS))=0;
+mskW=mygrid.mskW(:,:,1:nz); mskW(isnan(mskW))=0;
+mskS=mygrid.mskS(:,:,1:nz); mskS(isnan(mskS))=0;
 %%weight average by portion that is filled
 %mskW=mygrid.hFacW;
 %mskS=mygrid.hFacS;
@@ -116,10 +118,9 @@ for iz=1:nz
     Vg(:,:,iz)=vcur;
 end
     
-mskW=mygrid.mskW; ii=find(isnan(mskW)); mskW(ii)=0;
-mskS=mygrid.mskS; ii=find(isnan(mskS)); mskS(ii)=0;    
-Vg=Vg.*mskS;
-Ug=Ug.*mskW;
+mskW=mygrid.mskW(:,:,1:nz); ii=find(isnan(mskW)); mskW(ii)=0;
+mskS=mygrid.mskS(:,:,1:nz); ii=find(isnan(mskS)); mskS(ii)=0;    
+Vg=Vg.*mskS; Ug=Ug.*mskW;
 
 
 
